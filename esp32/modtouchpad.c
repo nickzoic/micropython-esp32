@@ -72,6 +72,20 @@ STATIC mp_obj_t touchpad_config(mp_obj_t num_obj, mp_obj_t threshold_obj) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(touchpad_config_obj, touchpad_config);
 
+STATIC mp_obj_t touchpad_autoconfig(mp_obj_t num_obj) {
+    touch_pad_t num = mp_obj_get_int(num_obj);
+    uint16_t threshold = 0;
+    for (int i=0; i<5; i++) {
+        uint16_t value = 0;
+        touch_pad_read(num, &value);
+        threshold += value * 2 / 3 / 5;
+    }
+    esp_err_t err = touch_pad_config(num, threshold);
+    if (err != ESP_OK) ESP_LOGD("touchpad_config", "%d", err);
+    return MP_OBJ_NEW_SMALL_INT(threshold);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(touchpad_autoconfig_obj, touchpad_autoconfig);
+
 STATIC mp_obj_t touchpad_read(mp_obj_t num_obj) {
     touch_pad_t num = mp_obj_get_int(num_obj);
     uint16_t value = 0;
@@ -105,6 +119,7 @@ STATIC const mp_rom_map_elem_t touchpad_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_touchpad) },
     { MP_ROM_QSTR(MP_QSTR___init__), MP_ROM_PTR(&touchpad_init_obj) },
     { MP_ROM_QSTR(MP_QSTR_config), MP_ROM_PTR(&touchpad_config_obj) },
+    { MP_ROM_QSTR(MP_QSTR_autoconfig), MP_ROM_PTR(&touchpad_autoconfig_obj) },
     { MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&touchpad_read_obj) },
     { MP_ROM_QSTR(MP_QSTR_poll), MP_ROM_PTR(&touchpad_poll_obj) },
     { MP_ROM_QSTR(MP_QSTR_pollall), MP_ROM_PTR(&touchpad_pollall_obj) },
