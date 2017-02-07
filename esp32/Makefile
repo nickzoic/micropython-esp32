@@ -123,6 +123,7 @@ SRC_C = \
 	modnetwork.c \
 	modsocket.c \
 	modesp.c \
+        modtouchpad.c \
 	$(SRC_MOD)
 
 STM_SRC_C = $(addprefix stmhal/,\
