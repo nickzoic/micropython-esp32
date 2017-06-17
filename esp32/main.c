@@ -48,6 +48,10 @@
 #include "uart.h"
 #include "modmachine.h"
 #include "mpthreadport.h"
+#include "esp_log.h"
+
+#include "tcpip_adapter.h"
+#include "rrepl.h"
 
 // MicroPython runs as a task under FreeRTOS
 #define MP_TASK_PRIORITY        (ESP_TASK_PRIO_MIN + 1)
@@ -116,8 +120,12 @@ soft_reset:
 
 void app_main(void) {
     nvs_flash_init();
+    tcpip_adapter_init();
+    rrepl_init();
     xTaskCreateStaticPinnedToCore(mp_task, "mp_task", MP_TASK_STACK_LEN, NULL, MP_TASK_PRIORITY,
                                   &mp_task_stack[0], &mp_task_tcb, 0);
+
+    xTaskCreate(rrepl_task, "rrepl_task", 4096, NULL, ESP_TASK_PRIO_MIN, NULL);
 }
 
 void nlr_jump_fail(void *val) {

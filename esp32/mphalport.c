@@ -39,6 +39,8 @@
 #include "extmod/misc.h"
 #include "lib/utils/pyexec.h"
 
+#include "rrepl.h"
+
 STATIC uint8_t stdin_ringbuf_array[256];
 ringbuf_t stdin_ringbuf = {stdin_ringbuf_array, sizeof(stdin_ringbuf_array)};
 
@@ -48,6 +50,10 @@ int mp_hal_stdin_rx_chr(void) {
         if (c != -1) {
             return c;
         }
+	c = rrepl_rx();
+	if (c != -1) {
+            return c;
+	}
         MICROPY_EVENT_POLL_HOOK
         vTaskDelay(1);
     }
@@ -55,6 +61,7 @@ int mp_hal_stdin_rx_chr(void) {
 
 void mp_hal_stdout_tx_char(char c) {
     uart_tx_one_char(c);
+    rrepl_tx(c);
     //mp_uos_dupterm_tx_strn(&c, 1);
 }
 

@@ -188,8 +188,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(get_wlan_obj, 0, 1, get_wlan);
 STATIC mp_obj_t esp_initialize() {
     static int initialized = 0;
     if (!initialized) {
-        ESP_LOGD("modnetwork", "Initializing TCP/IP");
-        tcpip_adapter_init();
+        //ESP_LOGD("modnetwork", "Initializing TCP/IP");
+        //tcpip_adapter_init();
         ESP_LOGD("modnetwork", "Initializing Event Loop");
         ESP_EXCEPTIONS( esp_event_loop_init(event_handler, NULL) );
         ESP_LOGD("modnetwork", "esp_event_loop_init done");
