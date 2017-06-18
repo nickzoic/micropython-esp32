@@ -11,7 +11,24 @@
 int rrepl_fd = -1;
 int rrepl_rx_state = 0;
 
+SemaphoreHandle_t rrepl_mutex_handle;
+StaticSemaphore_t rrepl_mutex_buffer;
+
 void rrepl_init() {
+    rrepl_mutex_handle = xSemaphoreCreateMutexStatic(&rrepl_mutex_buffer);
+}
+
+int rrepl_mutex_begin() {
+    return (pdTRUE == xSemaphoreTake(rrepl_mutex_handle, portMAX_DELAY));
+}
+
+void rrepl_mutex_end() {
+    xSemaphoreGive(rrepl_mutex_handle);
+}
+
+void rrepl_tx_telnet() {
+    /* Introduce ourselves with IAC WILL ECHO IAC DON'T ECHO */
+    lwip_write_r(rrepl_fd, "\xFF\xFB\x01\xFF\xFE\x01", 6);
 }
 
 void rrepl_task(void *pvParameter) {
@@ -29,35 +46,50 @@ void rrepl_task(void *pvParameter) {
     for (;;) {
         int fd = lwip_accept_r(bound_fd, &addr, &addr_len);
 	if (fd >= 0) {
-	    lwip_fcntl_r(fd, F_SETFL, O_NONBLOCK);
-	    if (rrepl_fd >= 0) lwip_close_r(rrepl_fd);
-	    rrepl_fd = fd;
-	    rrepl_rx_state = 0;
-	    lwip_write_r(rrepl_fd, "\xFF\xFB\x01\xFF\xFE\x01", 6); // TELNET IAC WILL ECHO IAC DON'T ECHO
+	    if (rrepl_mutex_begin()) {
+	        lwip_fcntl_r(fd, F_SETFL, O_NONBLOCK);
+	        if (rrepl_fd >= 0) lwip_close_r(rrepl_fd);
+	        rrepl_fd = fd;
+	        rrepl_rx_state = 0;
+	        rrepl_tx_telnet();
+		rrepl_mutex_end();
+	    }
 	}
     }
 }
 
 void rrepl_tx(char c) {
-    if (rrepl_fd >= 0) {
-        lwip_write_r(rrepl_fd, &c, 1);
-	if (c == 0xFF) lwip_write_r(rrepl_fd, &c, 1);
+    if (rrepl_mutex_begin()) {
+        if (rrepl_fd >= 0) {
+            lwip_write_r(rrepl_fd, &c, 1);
+	    if (c == 0xFF) lwip_write_r(rrepl_fd, &c, 1);
+        }
+	rrepl_mutex_end();
     }
 }
 
-
-int rrepl_rx() {
-    char c;
+int rrepl_rx_raw() {
     if (rrepl_fd < 0) return -1;
+    char c;
+    int r = lwip_read_r(rrepl_fd, &c, 1);
+    if (r > 0) return c;
+    if (r < 0 && errno != EWOULDBLOCK) {
+        lwip_close_r(rrepl_fd);
+        rrepl_fd = -1;
+    }
+    return -1;
+}
+
+int rrepl_rx_telnet() {
+    /* This is a half-arsed implementation of a small part of the Telnet protocol,
+     * as defined in RFC854 and friends.  A "\xFF" escape character introduces 
+     * commands which change the terminal behaviour.  We don't know how to respond
+     * to most of these so ignore them.
+     */
 
     for (;;) {
-        int r = lwip_read_r(rrepl_fd, &c, 1);
-        if (r < 0 && errno != EWOULDBLOCK) {
-            lwip_close_r(rrepl_fd);
-	    rrepl_fd = -1;
-	    return -1;
-        } 
-        if (r <= 0) return -1;
+	int c = rrepl_rx_raw();
+	if (c < 0) return -1;
 
         switch (rrepl_rx_state) {
 	    case 0:
@@ -71,7 +103,7 @@ int rrepl_rx() {
                     case 0xFE: rrepl_rx_state = 3; break; // DON'T
                     case 0xFB: rrepl_rx_state = 3; break; // WILL
                     case 0xFC: rrepl_rx_state = 3; break; // WON'T
-	            default: rrepl_rx_state = 0; break;   // DUNNO
+	            default: rrepl_rx_state = 0; break;
                 }
 		break;
 	    case 2: 
@@ -83,6 +115,14 @@ int rrepl_rx() {
 		rrepl_rx_state = 0;
 		break;
 	}
+    }
+}
+
+int rrepl_rx() {
+    if (rrepl_mutex_begin()) {
+        int c = rrepl_rx_telnet();
+	rrepl_mutex_end();
+	return c;
     }
     return -1;
 }
