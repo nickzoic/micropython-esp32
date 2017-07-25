@@ -95,6 +95,22 @@ STATIC mp_obj_t socket_close(const mp_obj_t arg0) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(socket_close_obj, socket_close);
 
+STATIC mp_obj_t socket_shutdown(const mp_obj_t arg0, const mp_obj_t arg1) {
+    socket_obj_t *self = MP_OBJ_TO_PTR(arg0);
+    int how = mp_obj_get_int(arg1);
+    if (how != SHUT_RD && how != SHUT_WR && how != SHUT_RDWR) {
+        mp_raise_ValueError("unsupported shutdown direction flag");
+    }
+    if (self->fd >= 0) {
+        int ret = lwip_shutdown_r(self->fd, how);
+        if (ret != 0) {
+            exception_from_errno(errno);
+        }
+    }
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(socket_shutdown_obj, socket_shutdown);
+
 static int _socket_getaddrinfo2(const mp_obj_t host, const mp_obj_t portx, struct addrinfo **resp) {
     const struct addrinfo hints = {
         .ai_family = AF_INET,
@@ -439,6 +455,7 @@ STATIC mp_uint_t socket_stream_ioctl(mp_obj_t self_in, mp_uint_t request, uintpt
 STATIC const mp_map_elem_t socket_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___del__), (mp_obj_t)&socket_close_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_close), (mp_obj_t)&socket_close_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_shutdown), (mp_obj_t)&socket_shutdown_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_bind), (mp_obj_t)&socket_bind_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_listen), (mp_obj_t)&socket_listen_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_accept), (mp_obj_t)&socket_accept_obj },
@@ -536,7 +553,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(esp_socket_getaddrinfo_obj, esp_socket_getaddri
 STATIC mp_obj_t esp_socket_initialize() {
     static int initialized = 0;
     if (!initialized) {
-        ESP_LOGI("modsocket", "Initializing");
         tcpip_adapter_init();
         initialized = 1;
     }
@@ -559,6 +575,10 @@ STATIC const mp_map_elem_t mp_module_socket_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_IPPROTO_UDP), MP_OBJ_NEW_SMALL_INT(IPPROTO_UDP) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_SOL_SOCKET), MP_OBJ_NEW_SMALL_INT(SOL_SOCKET) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_SO_REUSEADDR), MP_OBJ_NEW_SMALL_INT(SO_REUSEADDR) },
+
+    { MP_OBJ_NEW_QSTR(MP_QSTR_SHUT_RD), MP_OBJ_NEW_SMALL_INT(SHUT_RD) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_SHUT_WR), MP_OBJ_NEW_SMALL_INT(SHUT_WR) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_SHUT_RDWR), MP_OBJ_NEW_SMALL_INT(SHUT_RDWR) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_socket_globals, mp_module_socket_globals_table);
