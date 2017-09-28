@@ -440,11 +440,11 @@ STATIC mp_obj_t esp_status(mp_obj_t self_in) {
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(esp_status_obj, esp_status);
 
-STATIC mp_obj_t lan_status(mp_obj_t self_in) {
+STATIC mp_obj_t lan_isconnected(mp_obj_t self_in) {
     lan_if_obj_t *self = MP_OBJ_TO_PTR(self_in);
     return self->link_func() ? mp_const_true : mp_const_false;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(lan_status_obj, lan_status);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(lan_isconnected_obj, lan_isconnected);
 
 STATIC mp_obj_t esp_scan(mp_obj_t self_in) {
     // check that STA mode is active
@@ -696,7 +696,8 @@ const mp_obj_type_t wlan_if_type = {
 
 STATIC const mp_map_elem_t lan_if_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_active), (mp_obj_t)&lan_active_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_status), (mp_obj_t)&lan_status_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_isconnected), (mp_obj_t)&lan_isconnected_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_status), (mp_obj_t)&esp_status_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_ifconfig), (mp_obj_t)&esp_ifconfig_obj },
 };
 
