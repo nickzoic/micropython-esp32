@@ -204,6 +204,20 @@ STATIC void require_if(mp_obj_t wlan_if, int if_no) {
 }
 
 STATIC mp_obj_t get_wlan(size_t n_args, const mp_obj_t *args) {
+    static int initialized = 0;
+    if (!initialized) {
+        ESP_LOGD("modnetwork", "esp_event_loop_init done");
+        wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+        ESP_LOGD("modnetwork", "Initializing WiFi");
+        ESP_EXCEPTIONS( esp_wifi_init(&cfg) );
+        ESP_EXCEPTIONS( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
+        ESP_LOGD("modnetwork", "Initialized");
+        ESP_EXCEPTIONS( esp_wifi_set_mode(0) );
+        ESP_EXCEPTIONS( esp_wifi_start() );
+        ESP_LOGD("modnetwork", "Started");
+        initialized = 1;
+    }
+
     int idx = (n_args > 0) ? mp_obj_get_int(args[0]) : WIFI_IF_STA;
     if (idx == WIFI_IF_STA) {
         return MP_OBJ_FROM_PTR(&wlan_sta_obj);
@@ -284,7 +298,7 @@ STATIC mp_obj_t get_lan(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_ar
     lan_if_obj_t* self = MP_OBJ_TO_PTR(&lan_obj);
 
     if (self->initialized) {
-        mp_raise_msg(&mp_type_OSError, "ethernet already initialized");
+        return MP_OBJ_FROM_PTR(&lan_obj);
     }
 
     enum { ARG_id, ARG_mdc, ARG_mdio, ARG_power, ARG_phy_addr, ARG_phy_type };
@@ -345,15 +359,6 @@ STATIC mp_obj_t esp_initialize() {
         tcpip_adapter_init();
         ESP_LOGD("modnetwork", "Initializing Event Loop");
         ESP_EXCEPTIONS( esp_event_loop_init(event_handler, NULL) );
-        ESP_LOGD("modnetwork", "esp_event_loop_init done");
-        wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-        ESP_LOGD("modnetwork", "Initializing WiFi");
-        ESP_EXCEPTIONS( esp_wifi_init(&cfg) );
-        ESP_EXCEPTIONS( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-        ESP_LOGD("modnetwork", "Initialized");
-        ESP_EXCEPTIONS( esp_wifi_set_mode(0) );
-        ESP_EXCEPTIONS( esp_wifi_start() );
-        ESP_LOGD("modnetwork", "Started");
         initialized = 1;
     }
     return mp_const_none;
