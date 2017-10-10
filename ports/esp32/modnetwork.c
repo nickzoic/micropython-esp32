@@ -144,7 +144,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
         ESP_LOGI("wifi", "STA_START");
         break;
     case SYSTEM_EVENT_STA_GOT_IP:
-        ESP_LOGI("wifi", "GOT_IP");
+        ESP_LOGI("network", "GOT_IP");
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED: {
         // This is a workaround as ESP32 WiFi libs don't currently
