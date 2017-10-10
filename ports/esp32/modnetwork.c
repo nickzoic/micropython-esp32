@@ -50,6 +50,8 @@
 
 #define MODNETWORK_INCLUDE_CONSTANTS (1)
 
+#define QS(x) (uintptr_t)MP_OBJ_NEW_QSTR(x)
+
 NORETURN void _esp_exceptions(esp_err_t e) {
    switch (e) {
       case ESP_ERR_WIFI_NOT_INIT: 
@@ -267,11 +269,35 @@ STATIC mp_obj_t esp_disconnect(mp_obj_t self_in) {
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(esp_disconnect_obj, esp_disconnect);
 
-STATIC mp_obj_t esp_status(mp_obj_t self_in) {
-    return mp_const_none;
-}
+STATIC mp_obj_t esp_status(size_t n_args, const mp_obj_t *args) {
+    if (n_args == 1) return mp_const_none;
+    wlan_if_obj_t *self = MP_OBJ_TO_PTR(args[0]);
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(esp_status_obj, esp_status);
+    switch ((uintptr_t)args[1]) {
+        case QS(MP_QSTR_stations): {
+            require_if(self, WIFI_IF_AP);
+	    wifi_sta_list_t sta_list;
+            esp_wifi_ap_get_sta_list(&sta_list);
+            mp_obj_t list_obj = mp_obj_new_list(0, NULL);
+	    for (int i=0; i<sta_list.num; i++) {
+		mp_obj_tuple_t *t = mp_obj_new_tuple(2, NULL);
+		t->items[0] = mp_obj_new_bytes(sta_list.sta[i].mac, sizeof(sta_list.sta[i].mac));
+		t->items[1] = mp_const_none;
+		mp_obj_list_append(list_obj, t);
+	    }
+            return list_obj;
+	}
+        case QS(MP_QSTR_rssi): {
+            require_if(self, WIFI_IF_STA);
+	    wifi_ap_record_t ap_info;
+	    esp_wifi_sta_get_ap_info(&ap_info);
+            return mp_obj_new_int(ap_info.rssi);
+        }
+	default:
+            mp_raise_ValueError("bad status option");
+    }
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(esp_status_obj, 1, 2, esp_status);
 
 STATIC mp_obj_t esp_scan(mp_obj_t self_in) {
     // check that STA mode is active
@@ -391,7 +417,6 @@ STATIC mp_obj_t esp_config(size_t n_args, const mp_obj_t *args, mp_map_t *kwargs
             if (MP_MAP_SLOT_IS_FILLED(kwargs, i)) {
                 int req_if = -1;
 
-                #define QS(x) (uintptr_t)MP_OBJ_NEW_QSTR(x)
                 switch ((uintptr_t)kwargs->table[i].key) {
                     case QS(MP_QSTR_mac): {
                         mp_buffer_info_t bufinfo;
