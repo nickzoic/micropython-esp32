@@ -183,7 +183,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
         break;
     }
     default:
-        ESP_LOGI("wifi", "event %d", event->event_id);
+        ESP_LOGI("network", "event %d", event->event_id);
         break;
     }
     return ESP_OK;
