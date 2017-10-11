@@ -27,6 +27,7 @@ $(error Please configure the ESPIDF variable)
 endif
 ESPCOMP = $(ESPIDF)/components
 ESPTOOL ?= $(ESPCOMP)/esptool_py/esptool/esptool.py
+BUILDCOMP = $(BUILD)/components
 
 # verify the ESP IDF version
 ESPIDF_SUPHASH := 9a26296a0e88a4c3ae27e9c848be970946fff87e
@@ -201,7 +202,7 @@ SRC_QSTR_AUTO_DEPS +=
 ################################################################################
 # List of object files from the ESP32 IDF components
 
-ESPIDF_DRIVER_O = $(addprefix $(ESPCOMP)/driver/,\
+ESPIDF_DRIVER_O = $(addprefix $(BUILDCOMP)/driver/,\
 	uart.o \
 	periph_ctrl.o \
 	ledc.o \
@@ -212,8 +213,8 @@ ESPIDF_DRIVER_O = $(addprefix $(ESPCOMP)/driver/,\
 	rtc_module.o \
 	)
 
-$(BUILD)/$(ESPCOMP)/esp32/dport_access.o: CFLAGS += -Wno-array-bounds
-ESPIDF_ESP32_O = $(addprefix $(ESPCOMP)/esp32/,\
+$(BUILDCOMP)/esp32/dport_access.o: CFLAGS += -Wno-array-bounds
+ESPIDF_ESP32_O = $(addprefix $(BUILDCOMP)/esp32/,\
 	panic.o \
 	esp_timer.o \
 	esp_timer_esp32.o \
@@ -242,13 +243,13 @@ ESPIDF_ESP32_O = $(addprefix $(ESPCOMP)/esp32/,\
 	wifi_init.o \
 	)
 
-ESPIDF_HEAP_O = $(addprefix $(ESPCOMP)/heap/,\
+ESPIDF_HEAP_O = $(addprefix $(BUILDCOMP)/heap/,\
 	heap_caps.o \
 	heap_caps_init.o \
 	multi_heap.o \
 	)
 
-ESPIDF_SOC_O = $(addprefix $(ESPCOMP)/soc/,\
+ESPIDF_SOC_O = $(addprefix $(BUILDCOMP)/soc/,\
 	esp32/cpu_util.o \
 	esp32/rtc_clk.o \
 	esp32/rtc_init.o \
@@ -258,17 +259,17 @@ ESPIDF_SOC_O = $(addprefix $(ESPCOMP)/soc/,\
 	esp32/soc_memory_layout.o \
 	)
 
-ESPIDF_CXX_O = $(addprefix $(ESPCOMP)/cxx/,\
+ESPIDF_CXX_O = $(addprefix $(BUILDCOMP)/cxx/,\
 	cxx_guards.o \
 	)
 
-ESPIDF_ETHERNET_O = $(addprefix $(ESPCOMP)/ethernet/,\
+ESPIDF_ETHERNET_O = $(addprefix $(BUILDCOMP)/ethernet/,\
 	emac_dev.o \
 	emac_main.o \
 	)
 
-$(BUILD)/$(ESPCOMP)/expat/%.o: CFLAGS += -Wno-unused-function
-ESPIDF_EXPAT_O = $(addprefix $(ESPCOMP)/expat/,\
+$(BUILDCOMP)/expat/%.o: CFLAGS += -Wno-unused-function
+ESPIDF_EXPAT_O = $(addprefix $(BUILDCOMP)/expat/,\
 	library/xmltok_ns.o \
 	library/xmltok.o \
 	library/xmlparse.o \
@@ -279,7 +280,7 @@ ESPIDF_EXPAT_O = $(addprefix $(ESPCOMP)/expat/,\
 	port/chardata.o \
 	)
 
-ESPIDF_PTHREAD_O = $(addprefix $(ESPCOMP)/pthread/,\
+ESPIDF_PTHREAD_O = $(addprefix $(BUILDCOMP)/pthread/,\
 	pthread.o \
 	)
 
@@ -288,12 +289,12 @@ ESPIDF_PTHREAD_O = $(addprefix $(ESPCOMP)/pthread/,\
 # We also need custom CFLAGS for .c files because FreeRTOS has headers with
 # generic names (eg queue.h) which can clash with other files in the port.
 CFLAGS_ASM = -I$(ESPCOMP)/esp32/include -I$(ESPCOMP)/soc/esp32/include -I$(ESPCOMP)/freertos/include/freertos -I.
-$(BUILD)/$(ESPCOMP)/freertos/portasm.o: CFLAGS = $(CFLAGS_ASM)
-$(BUILD)/$(ESPCOMP)/freertos/xtensa_context.o: CFLAGS = $(CFLAGS_ASM)
-$(BUILD)/$(ESPCOMP)/freertos/xtensa_intr_asm.o: CFLAGS = $(CFLAGS_ASM)
-$(BUILD)/$(ESPCOMP)/freertos/xtensa_vectors.o: CFLAGS = $(CFLAGS_ASM)
-$(BUILD)/$(ESPCOMP)/freertos/%.o: CFLAGS = $(CFLAGS_BASE) -I. $(INC_ESPCOMP) -I$(ESPCOMP)/freertos/include/freertos
-ESPIDF_FREERTOS_O = $(addprefix $(ESPCOMP)/freertos/,\
+$(BUILDCOMP)/freertos/portasm.o: CFLAGS = $(CFLAGS_ASM)
+$(BUILDCOMP)/freertos/xtensa_context.o: CFLAGS = $(CFLAGS_ASM)
+$(BUILDCOMP)/freertos/xtensa_intr_asm.o: CFLAGS = $(CFLAGS_ASM)
+$(BUILDCOMP)/freertos/xtensa_vectors.o: CFLAGS = $(CFLAGS_ASM)
+$(BUILDCOMP)/freertos/%.o: CFLAGS = $(CFLAGS_BASE) -I. $(INC_ESPCOMP) -I$(ESPCOMP)/freertos/include/freertos
+ESPIDF_FREERTOS_O = $(addprefix $(BUILDCOMP)/freertos/,\
 	croutine.o \
 	event_groups.o \
 	FreeRTOS-openocd.o \
@@ -313,34 +314,34 @@ ESPIDF_FREERTOS_O = $(addprefix $(ESPCOMP)/freertos/,\
 	xtensa_vectors.o \
 	)
 
-ESPIDF_VFS_O = $(addprefix $(ESPCOMP)/vfs/,\
+ESPIDF_VFS_O = $(addprefix $(BUILDCOMP)/vfs/,\
 	vfs_uart.o \
 	vfs.o \
 	)
 
-ESPIDF_JSON_O = $(addprefix $(ESPCOMP)/json/,\
+ESPIDF_JSON_O = $(addprefix $(BUILDCOMP)/json/,\
 	library/cJSON.o \
 	port/cJSON_Utils.o \
 	)
 
-ESPIDF_LOG_O = $(addprefix $(ESPCOMP)/log/,\
+ESPIDF_LOG_O = $(addprefix $(BUILDCOMP)/log/,\
 	log.o \
 	)
 
-ESPIDF_XTENSA_DEBUG_MODULE_O = $(addprefix $(ESPCOMP)/xtensa-debug-module/,\
+ESPIDF_XTENSA_DEBUG_MODULE_O = $(addprefix $(BUILDCOMP)/xtensa-debug-module/,\
 	eri.o \
 	trax.o \
 	)
 
-ESPIDF_TCPIP_ADAPTER_O = $(addprefix $(ESPCOMP)/tcpip_adapter/,\
+ESPIDF_TCPIP_ADAPTER_O = $(addprefix $(BUILDCOMP)/tcpip_adapter/,\
 	tcpip_adapter_lwip.o \
 	)
 
-ESPIDF_APP_TRACE_O = $(addprefix $(ESPCOMP)/app_trace/,\
+ESPIDF_APP_TRACE_O = $(addprefix $(BUILDCOMP)/app_trace/,\
 	app_trace.o \
 	)
 
-ESPIDF_NEWLIB_O = $(addprefix $(ESPCOMP)/newlib/,\
+ESPIDF_NEWLIB_O = $(addprefix $(BUILDCOMP)/newlib/,\
 	time.o \
 	syscalls.o \
 	syscall_table.o \
@@ -348,7 +349,7 @@ ESPIDF_NEWLIB_O = $(addprefix $(ESPCOMP)/newlib/,\
 	locks.o \
 	)
 
-ESPIDF_NGHTTP_O = $(addprefix $(ESPCOMP)/nghttp/,\
+ESPIDF_NGHTTP_O = $(addprefix $(BUILDCOMP)/nghttp/,\
 	nghttp2/lib/nghttp2_http.o \
 	nghttp2/lib/nghttp2_version.o \
 	nghttp2/lib/nghttp2_mem.o \
@@ -373,7 +374,7 @@ ESPIDF_NGHTTP_O = $(addprefix $(ESPCOMP)/nghttp/,\
 	port/http_parser.o \
 	)
 
-ESPIDF_NVS_FLASH_O = $(addprefix $(ESPCOMP)/nvs_flash/,\
+ESPIDF_NVS_FLASH_O = $(addprefix $(BUILDCOMP)/nvs_flash/,\
 	src/nvs_types.o \
 	src/nvs_page.o \
 	src/nvs_item_hash_list.o \
@@ -382,10 +383,10 @@ ESPIDF_NVS_FLASH_O = $(addprefix $(ESPCOMP)/nvs_flash/,\
 	src/nvs_api.o \
 	)
 
-ESPIDF_OPENSSL_O = $(addprefix $(ESPCOMP)/openssl/,\
+ESPIDF_OPENSSL_O = $(addprefix $(BUILDCOMP)/openssl/,\
 	)
 
-ESPIDF_SPI_FLASH_O = $(addprefix $(ESPCOMP)/spi_flash/,\
+ESPIDF_SPI_FLASH_O = $(addprefix $(BUILDCOMP)/spi_flash/,\
 	flash_mmap.o \
 	partition.o \
 	spi_flash_rom_patch.o \
@@ -393,8 +394,8 @@ ESPIDF_SPI_FLASH_O = $(addprefix $(ESPCOMP)/spi_flash/,\
 	flash_ops.o \
 	)
 
-$(BUILD)/$(ESPCOMP)/lwip/%.o: CFLAGS += -Wno-address -Wno-unused-variable -Wno-unused-but-set-variable
-ESPIDF_LWIP_O = $(addprefix $(ESPCOMP)/lwip/,\
+$(BUILDCOMP)/lwip/%.o: CFLAGS += -Wno-address -Wno-unused-variable -Wno-unused-but-set-variable
+ESPIDF_LWIP_O = $(addprefix $(BUILDCOMP)/lwip/,\
 	api/pppapi.o \
 	api/netbuf.o \
 	api/api_lib.o \
@@ -449,7 +450,7 @@ ESPIDF_LWIP_O = $(addprefix $(ESPCOMP)/lwip/,\
 	port/netif/ethernetif.o \
 	)
 
-ESPIDF_MBEDTLS_O = $(addprefix $(ESPCOMP)/mbedtls/,\
+ESPIDF_MBEDTLS_O = $(addprefix $(BUILDCOMP)/mbedtls/,\
 	library/entropy.o \
 	library/pkcs12.o \
 	library/ccm.o \
@@ -526,8 +527,8 @@ ESPIDF_MBEDTLS_O = $(addprefix $(ESPCOMP)/mbedtls/,\
 	port/esp_sha512.o \
 	)
 
-$(BUILD)/$(ESPCOMP)/wpa_supplicant/%.o: CFLAGS += -DEMBEDDED_SUPP -D__ets__ -Wno-strict-aliasing
-ESPIDF_WPA_SUPPLICANT_O = $(addprefix $(ESPCOMP)/wpa_supplicant/,\
+$(BUILDCOMP)/wpa_supplicant/%.o: CFLAGS += -DEMBEDDED_SUPP -D__ets__ -Wno-strict-aliasing
+ESPIDF_WPA_SUPPLICANT_O = $(addprefix $(BUILDCOMP)/wpa_supplicant/,\
 	src/crypto/aes-internal-enc.o \
 	src/crypto/sha256-internal.o \
 	src/crypto/md5-internal.o \
@@ -557,29 +558,39 @@ ESPIDF_WPA_SUPPLICANT_O = $(addprefix $(ESPCOMP)/wpa_supplicant/,\
 	)
 
 OBJ_ESPIDF =
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_NEWLIB_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_DRIVER_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_ESP32_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_HEAP_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_SOC_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_CXX_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_ETHERNET_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_EXPAT_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_PTHREAD_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_FREERTOS_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_VFS_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_JSON_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_LOG_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_LWIP_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_MBEDTLS_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_XTENSA_DEBUG_MODULE_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_TCPIP_ADAPTER_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_APP_TRACE_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_NGHTTP_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_NVS_FLASH_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_OPENSSL_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_SPI_FLASH_O))
-OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_WPA_SUPPLICANT_O))
+OBJ_ESPIDF += $(ESPIDF_NEWLIB_O)
+OBJ_ESPIDF += $(ESPIDF_DRIVER_O)
+OBJ_ESPIDF += $(ESPIDF_ESP32_O)
+OBJ_ESPIDF += $(ESPIDF_HEAP_O)
+OBJ_ESPIDF += $(ESPIDF_SOC_O)
+OBJ_ESPIDF += $(ESPIDF_CXX_O)
+OBJ_ESPIDF += $(ESPIDF_ETHERNET_O)
+OBJ_ESPIDF += $(ESPIDF_EXPAT_O)
+OBJ_ESPIDF += $(ESPIDF_PTHREAD_O)
+OBJ_ESPIDF += $(ESPIDF_FREERTOS_O)
+OBJ_ESPIDF += $(ESPIDF_VFS_O)
+OBJ_ESPIDF += $(ESPIDF_JSON_O)
+OBJ_ESPIDF += $(ESPIDF_LOG_O)
+OBJ_ESPIDF += $(ESPIDF_LWIP_O)
+OBJ_ESPIDF += $(ESPIDF_MBEDTLS_O)
+OBJ_ESPIDF += $(ESPIDF_XTENSA_DEBUG_MODULE_O)
+OBJ_ESPIDF += $(ESPIDF_TCPIP_ADAPTER_O)
+OBJ_ESPIDF += $(ESPIDF_APP_TRACE_O)
+OBJ_ESPIDF += $(ESPIDF_NGHTTP_O)
+OBJ_ESPIDF += $(ESPIDF_NVS_FLASH_O)
+OBJ_ESPIDF += $(ESPIDF_OPENSSL_O)
+OBJ_ESPIDF += $(ESPIDF_SPI_FLASH_O)
+OBJ_ESPIDF += $(ESPIDF_WPA_SUPPLICANT_O)
+
+$(BUILDCOMP)/%.o: $(ESPCOMP)/%.c
+	$(call compile_c)
+
+$(BUILDCOMP)/%.o: $(ESPCOMP)/%.cpp
+	$(call compile_cxx)
+
+$(BUILDCOMP)/%.o: $(ESPCOMP)/%.S
+	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
+
 ################################################################################
 # Main targets
 
