@@ -7,6 +7,7 @@
  * The MIT License (MIT)
  *
  * Copyright (c) 2016, 2017 Nick Moore @mnemote
+ * Copyright (c) 2017 "Eric Poulsen" <eric@zyxod.com>
  *
  * Based on esp8266/modnetwork.c which is Copyright (c) 2015 Paul Sokolovsky
  * And the ESP IDF example code which is Public Domain / CC0

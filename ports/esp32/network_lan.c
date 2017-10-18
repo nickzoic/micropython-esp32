@@ -1,15 +1,11 @@
 /*
  * This file is part of the MicroPython project, http://micropython.org/
  *
- * Development of the code in this file was sponsored by Microbric Pty Ltd
- * and Mnemote Pty Ltd
- *
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 "Eric Poulsen" <eric@zyxod.com>
  *
- * Based on esp8266/modnetwork.c which is Copyright (c) 2015 Paul Sokolovsky
- * And the ESP IDF example code which is Public Domain / CC0
+ * Based on the ESP IDF example code which is Public Domain / CC0
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
