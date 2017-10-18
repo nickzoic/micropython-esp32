@@ -126,7 +126,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
         ESP_LOGI("wifi", "STA_START");
         break;
     case SYSTEM_EVENT_STA_GOT_IP:
-        ESP_LOGI("wifi", "GOT_IP");
+        ESP_LOGI("network", "GOT_IP");
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED: {
         // This is a workaround as ESP32 WiFi libs don't currently
@@ -165,7 +165,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
         break;
     }
     default:
-        ESP_LOGI("wifi", "event %d", event->event_id);
+        ESP_LOGI("network", "event %d", event->event_id);
         break;
     }
     return ESP_OK;
@@ -186,6 +186,20 @@ STATIC void require_if(mp_obj_t wlan_if, int if_no) {
 }
 
 STATIC mp_obj_t get_wlan(size_t n_args, const mp_obj_t *args) {
+    static int initialized = 0;
+    if (!initialized) {
+        ESP_LOGD("modnetwork", "esp_event_loop_init done");
+        wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+        ESP_LOGD("modnetwork", "Initializing WiFi");
+        ESP_EXCEPTIONS( esp_wifi_init(&cfg) );
+        ESP_EXCEPTIONS( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
+        ESP_LOGD("modnetwork", "Initialized");
+        ESP_EXCEPTIONS( esp_wifi_set_mode(0) );
+        ESP_EXCEPTIONS( esp_wifi_start() );
+        ESP_LOGD("modnetwork", "Started");
+        initialized = 1;
+    }
+
     int idx = (n_args > 0) ? mp_obj_get_int(args[0]) : WIFI_IF_STA;
     if (idx == WIFI_IF_STA) {
         return MP_OBJ_FROM_PTR(&wlan_sta_obj);
@@ -204,15 +218,6 @@ STATIC mp_obj_t esp_initialize() {
         tcpip_adapter_init();
         ESP_LOGD("modnetwork", "Initializing Event Loop");
         ESP_EXCEPTIONS( esp_event_loop_init(event_handler, NULL) );
-        ESP_LOGD("modnetwork", "esp_event_loop_init done");
-        wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-        ESP_LOGD("modnetwork", "Initializing WiFi");
-        ESP_EXCEPTIONS( esp_wifi_init(&cfg) );
-        ESP_EXCEPTIONS( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-        ESP_LOGD("modnetwork", "Initialized");
-        ESP_EXCEPTIONS( esp_wifi_set_mode(0) );
-        ESP_EXCEPTIONS( esp_wifi_start() );
-        ESP_LOGD("modnetwork", "Started");
         initialized = 1;
     }
     return mp_const_none;
