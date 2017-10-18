@@ -136,6 +136,7 @@ SRC_C = \
 	machine_uart.c \
 	modmachine.c \
 	modnetwork.c \
+        network_lan.c \
 	modsocket.c \
 	modesp.c \
 	moduhashlib.c \
