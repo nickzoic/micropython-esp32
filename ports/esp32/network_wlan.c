@@ -35,7 +35,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "network_lan.h"
+#include "network_wlan.h"
 
 #include "py/nlr.h"
 #include "py/objlist.h"
@@ -50,10 +50,6 @@
 #include "esp_log.h"
 #include "lwip/dns.h"
 #include "tcpip_adapter.h"
-
-#define MODNETWORK_INCLUDE_CONSTANTS (1)
-
-MP_DECLARE_CONST_FUN_OBJ_KW(get_lan_obj);
 
 NORETURN void _esp_exceptions(esp_err_t e) {
    switch (e) {
@@ -121,7 +117,7 @@ static bool wifi_sta_connected = false;
 
 // This function is called by the system-event task and so runs in a different
 // thread to the main MicroPython task.  It must not raise any Python exceptions.
-static esp_err_t event_handler(void *ctx, system_event_t *event) {
+esp_err_t wlan_event_handler(void *ctx, system_event_t *event) {
    switch(event->event_id) {
     case SYSTEM_EVENT_STA_START:
         ESP_LOGI("wifi", "STA_START");
@@ -171,13 +167,6 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
     }
     return ESP_OK;
 }
-
-/*void error_check(bool status, const char *msg) {
-    if (!status) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, msg));
-    }
-}
-*/
 
 STATIC void require_if(mp_obj_t wlan_if, int if_no) {
     wlan_if_obj_t *self = MP_OBJ_TO_PTR(wlan_if);
@@ -529,57 +518,4 @@ const mp_obj_type_t wlan_if_type = {
     { &mp_type_type },
     .name = MP_QSTR_WLAN,
     .locals_dict = (mp_obj_t)&wlan_if_locals_dict,
-};
-
-STATIC mp_obj_t esp_phy_mode(size_t n_args, const mp_obj_t *args) {
-    return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(esp_phy_mode_obj, 0, 1, esp_phy_mode);
-
-
-STATIC const mp_map_elem_t mp_module_network_globals_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_network) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&esp_initialize_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_WLAN), (mp_obj_t)&get_wlan_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_LAN), (mp_obj_t)&get_lan_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_phy_mode), (mp_obj_t)&esp_phy_mode_obj },
-
-#if MODNETWORK_INCLUDE_CONSTANTS
-    { MP_OBJ_NEW_QSTR(MP_QSTR_STA_IF),
-        MP_OBJ_NEW_SMALL_INT(WIFI_IF_STA)},
-    { MP_OBJ_NEW_QSTR(MP_QSTR_AP_IF),
-        MP_OBJ_NEW_SMALL_INT(WIFI_IF_AP)},
-
-    { MP_OBJ_NEW_QSTR(MP_QSTR_MODE_11B),
-        MP_OBJ_NEW_SMALL_INT(WIFI_PROTOCOL_11B) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_MODE_11G),
-        MP_OBJ_NEW_SMALL_INT(WIFI_PROTOCOL_11G) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_MODE_11N),
-        MP_OBJ_NEW_SMALL_INT(WIFI_PROTOCOL_11N) },
-
-    { MP_OBJ_NEW_QSTR(MP_QSTR_AUTH_OPEN),
-        MP_OBJ_NEW_SMALL_INT(WIFI_AUTH_OPEN) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_AUTH_WEP),
-        MP_OBJ_NEW_SMALL_INT(WIFI_AUTH_WEP) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_AUTH_WPA_PSK),
-        MP_OBJ_NEW_SMALL_INT(WIFI_AUTH_WPA_PSK) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_AUTH_WPA2_PSK),
-        MP_OBJ_NEW_SMALL_INT(WIFI_AUTH_WPA2_PSK) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_AUTH_WPA_WPA2_PSK),
-        MP_OBJ_NEW_SMALL_INT(WIFI_AUTH_WPA_WPA2_PSK) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_AUTH_MAX),
-        MP_OBJ_NEW_SMALL_INT(WIFI_AUTH_MAX) },
-
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PHY_LAN8720),
-        MP_OBJ_NEW_SMALL_INT(PHY_LAN8720) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PHY_TLK110),
-        MP_OBJ_NEW_SMALL_INT(PHY_TLK110) },
-#endif
-};
-
-STATIC MP_DEFINE_CONST_DICT(mp_module_network_globals, mp_module_network_globals_table);
-
-const mp_obj_module_t mp_module_network = {
-    .base = { &mp_type_module },
-    .globals = (mp_obj_dict_t*)&mp_module_network_globals,
 };
