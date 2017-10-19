@@ -35,8 +35,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "network_lan.h"
-
 #include "py/nlr.h"
 #include "py/objlist.h"
 #include "py/runtime.h"
@@ -51,9 +49,13 @@
 #include "lwip/dns.h"
 #include "tcpip_adapter.h"
 
+#include "network_lan.h"
+#include "network_wlan.h"
+
 #define MODNETWORK_INCLUDE_CONSTANTS (1)
 
 MP_DECLARE_CONST_FUN_OBJ_KW(get_lan_obj);
+MP_DECLARE_CONST_FUN_OBJ_KW(get_wlan_obj);
 
 // This function is called by the system-event task and so runs in a different
 // thread to the main MicroPython task.  It must not raise any Python exceptions.
@@ -62,7 +64,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
     case SYSTEM_EVENT_STA_START:
     case SYSTEM_EVENT_STA_GOT_IP:
     case SYSTEM_EVENT_STA_DISCONNECTED:
-	return wifi_event_handler(ctx, event);
+	return wlan_event_handler(ctx, event);
     default:
         ESP_LOGI("network", "event %d", event->event_id);
     }
@@ -75,7 +77,8 @@ STATIC mp_obj_t esp_initialize() {
         ESP_LOGD("modnetwork", "Initializing TCP/IP");
         tcpip_adapter_init();
         ESP_LOGD("modnetwork", "Initializing Event Loop");
-        ESP_EXCEPTIONS( esp_event_loop_init(event_handler, NULL) );
+	// XXX exception
+        esp_event_loop_init(event_handler, NULL);
         initialized = 1;
     }
     return mp_const_none;

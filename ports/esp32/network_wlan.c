@@ -35,8 +35,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "network_wlan.h"
-
 #include "py/nlr.h"
 #include "py/objlist.h"
 #include "py/runtime.h"
@@ -50,6 +48,8 @@
 #include "esp_log.h"
 #include "lwip/dns.h"
 #include "tcpip_adapter.h"
+
+#include "network_wlan.h"
 
 NORETURN void _esp_exceptions(esp_err_t e) {
    switch (e) {
@@ -199,20 +199,7 @@ STATIC mp_obj_t get_wlan(size_t n_args, const mp_obj_t *args) {
         mp_raise_ValueError("invalid WLAN interface identifier");
     }
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(get_wlan_obj, 0, 1, get_wlan);
-
-STATIC mp_obj_t esp_initialize() {
-    static int initialized = 0;
-    if (!initialized) {
-        ESP_LOGD("modnetwork", "Initializing TCP/IP");
-        tcpip_adapter_init();
-        ESP_LOGD("modnetwork", "Initializing Event Loop");
-        ESP_EXCEPTIONS( esp_event_loop_init(event_handler, NULL) );
-        initialized = 1;
-    }
-    return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(esp_initialize_obj, esp_initialize);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(get_wlan_obj, 0, 1, get_wlan);
 
 #if (WIFI_MODE_STA & WIFI_MODE_AP != WIFI_MODE_NULL || WIFI_MODE_STA | WIFI_MODE_AP != WIFI_MODE_APSTA)
 #error WIFI_MODE_STA and WIFI_MODE_AP are supposed to be bitfields!
