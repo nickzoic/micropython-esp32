@@ -3,7 +3,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2017 "Eric Poulsen" <eric@zyxod.com>
+ * Copyright (c) 2017 Nick Moore @mnemote
  *
  * Based on the ESP IDF example code which is Public Domain / CC0
  *
